@@ -1,45 +1,24 @@
-import type { ComponentOptions, ConcreteComponent } from "vue";
-import type {
-  ArgTypes,
-  Parameters as SbParameters,
-  BaseDecorators,
-} from "@storybook/addons";
-import type { Story } from "@storybook/vue3";
+import type { StoryContext as StoryContextBase, WebRenderer } from '@storybook/types';
+import type { ConcreteComponent } from 'vue';
 
-export type StoryFnVueReturnType = string | ComponentOptions<any>;
-/**
- * Object representing the preview.ts module
- *
- * Used in storybook testing utilities.
- * @see [Unit testing with Storybook](https://storybook.js.org/docs/react/workflows/unit-testing)
- */
-export type GlobalConfig = {
-  decorators?: BaseDecorators<StoryFnVueReturnType>;
-  parameters?: SbParameters;
-  argTypes?: ArgTypes;
-  [key: string]: any;
-};
+export type { RenderContext } from '@storybook/types';
 
-export type Head<T extends any[]> = T extends [...infer Head, any] ? Head : any[];
+export interface ShowErrorArgs {
+  title: string;
+  description: string;
+}
+
+export type StoryFnVueReturnType = ConcreteComponent<any>;
+
+export type StoryContext = StoryContextBase<VueRenderer>;
 
 /**
- * A StoryFn where the context is already curried
- * in other words no more context param at the end
+ * @deprecated Use `VueRenderer` instead.
  */
-export type ContextedStory<GenericArgs> = (
-  ...params: Partial<Head<Parameters<Story<Partial<GenericArgs>>>>>
-) => ConcreteComponent;
-
-/**
- * T represents the whole es module of a stories file. K of T means named exports (basically the Story type)
- * 1. pick the keys K of T that have properties that are Story<AnyProps>
- * 2. infer the actual prop type for each Story
- * 3. reconstruct Story with Partial. Story<Props> -> Story<Partial<Props>>
- */
-export type StoriesWithPartialProps<T> = {
-  [K in keyof T as T[K] extends Story<any> ? K : never]: T[K] extends Story<
-    infer P
-  >
-    ? ContextedStory<P>
-    : unknown;
-};
+export type VueFramework = VueRenderer;
+export interface VueRenderer extends WebRenderer {
+  // We are omitting props, as we don't use it internally, and more importantly, it completely changes the assignability of meta.component.
+  // Try not omitting, and check the type errros in the test file, if you want to learn more.
+  component: Omit<ConcreteComponent<this['T']>, 'props'>;
+  storyResult: StoryFnVueReturnType;
+}
